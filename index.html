@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emergency CAD - พันท้ายนรสิงห์</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-gray-100 font-sans antialiased text-gray-800">
+
+    <!-- Header -->
+    <header class="bg-red-600 text-white p-4 shadow-md flex justify-between items-center">
+        <h1 class="text-xl font-bold"><i class="fas fa-ambulance mr-2"></i> ศูนย์กู้ชีพพันท้ายนรสิงห์</h1>
+        <div id="user-info" class="hidden">
+            <span id="display-name" class="mr-4 text-sm"></span>
+            <button onclick="logout()" class="bg-red-800 hover:bg-red-900 px-3 py-1 rounded text-sm"><i class="fas fa-sign-out-alt"></i> ออกจากระบบ</button>
+        </div>
+    </header>
+
+    <main class="container mx-auto p-4 mt-4">
+        <!-- Section: Auth (Login/Register) -->
+        <section id="auth-section" class="max-w-md mx-auto bg-white p-6 rounded-lg shadow-md">
+            <h2 class="text-2xl font-bold text-center mb-6 text-gray-700">เข้าสู่ระบบ</h2>
+            <form id="login-form" class="space-y-4">
+                <input type="text" id="username" placeholder="ชื่อผู้ใช้งาน" class="w-full p-2 border rounded focus:ring-2 focus:ring-red-500" required>
+                <input type="password" id="password" placeholder="รหัสผ่าน" class="w-full p-2 border rounded focus:ring-2 focus:ring-red-500" required>
+                <button type="submit" class="w-full bg-red-600 text-white p-2 rounded hover:bg-red-700 transition">เข้าสู่ระบบ</button>
+                <p class="text-center text-sm text-gray-500 mt-4">ผู้ปฏิบัติการใหม่? <a href="#" onclick="toggleRegister()" class="text-blue-600">ลงทะเบียนที่นี่</a></p>
+            </form>
+
+            <form id="register-form" class="space-y-4 hidden">
+                <input type="text" id="reg-name" placeholder="ชื่อ-นามสกุล" class="w-full p-2 border rounded" required>
+                <input type="text" id="reg-username" placeholder="ตั้งชื่อผู้ใช้งาน" class="w-full p-2 border rounded" required>
+                <input type="password" id="reg-password" placeholder="ตั้งรหัสผ่าน" class="w-full p-2 border rounded" required>
+                <select id="reg-role" class="w-full p-2 border rounded">
+                    <option value="Responder">ผู้ปฏิบัติการ (Responder)</option>
+                    <option value="Dispatcher">ศูนย์สั่งการ (Dispatcher)</option>
+                </select>
+                <button type="submit" class="w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700 transition">ลงทะเบียน</button>
+                <p class="text-center text-sm text-gray-500 mt-4"><a href="#" onclick="toggleRegister()" class="text-blue-600">กลับไปหน้าเข้าสู่ระบบ</a></p>
+            </form>
+        </section>
+
+        <!-- Section: Dispatcher Dashboard -->
+        <section id="dispatcher-section" class="hidden">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- ฟอร์มรับแจ้งเหตุ -->
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h2 class="text-xl font-bold mb-4 border-b pb-2"><i class="fas fa-plus-circle text-red-500"></i> รับแจ้งเหตุใหม่</h2>
+                    <form id="create-case-form" class="space-y-3">
+                        <input type="text" id="case-caller" placeholder="ชื่อผู้แจ้ง" class="w-full p-2 border rounded" required>
+                        <input type="tel" id="case-phone" placeholder="เบอร์โทรติดต่อ" class="w-full p-2 border rounded" required>
+                        <input type="text" id="case-location" placeholder="สถานที่เกิดเหตุ" class="w-full p-2 border rounded" required>
+                        <textarea id="case-desc" placeholder="อาการ/เหตุที่เกิด" class="w-full p-2 border rounded" rows="3" required></textarea>
+                        <select id="case-severity" class="w-full p-2 border rounded">
+                            <option value="Low">สีเขียว - บาดเจ็บเล็กน้อย</option>
+                            <option value="Medium">สีเหลือง - บาดเจ็บ/ป่วยปานกลาง</option>
+                            <option value="High">สีแดง - วิกฤต/ฉุกเฉิน</option>
+                        </select>
+                        <button type="submit" class="w-full bg-green-600 text-white p-2 rounded hover:bg-green-700">บันทึกเคส</button>
+                    </form>
+                </div>
+                <!-- รายการเคส -->
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h2 class="text-xl font-bold mb-4 border-b pb-2"><i class="fas fa-list text-blue-500"></i> รายการเคส (รอสั่งการ)</h2>
+                    <div id="case-list-container" class="space-y-3 overflow-y-auto max-h-96">
+                        <!-- เคสจะถูก Render ที่นี่ -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section: Responder Dashboard (Mobile-first) -->
+        <section id="responder-section" class="hidden max-w-md mx-auto">
+            <div id="no-case" class="text-center p-10 bg-white rounded-lg shadow-md">
+                <i class="fas fa-check-circle text-5xl text-green-500 mb-4"></i>
+                <h2 class="text-xl font-bold text-gray-700">สแตนด์บาย</h2>
+                <p class="text-gray-500 mt-2">ขณะนี้ยังไม่มีเคสที่ได้รับมอบหมาย</p>
+                <div class="mt-4 text-xs text-gray-400">ระบบอัปเดตอัตโนมัติทุก 10 วินาที...</div>
+            </div>
+
+            <div id="active-case" class="hidden bg-white p-6 rounded-lg shadow-md border-t-4 border-red-500">
+                <div class="flex justify-between items-center mb-4">
+                    <span class="bg-red-100 text-red-800 text-xs font-bold px-2 py-1 rounded">เคสด่วน!</span>
+                    <span id="r-case-id" class="text-sm text-gray-500 font-mono"></span>
+                </div>
+                <h2 id="r-case-location" class="text-2xl font-bold text-gray-800 mb-2"></h2>
+                <p class="text-gray-600 mb-1"><i class="fas fa-info-circle w-5"></i> <span id="r-case-desc"></span></p>
+                <p class="text-gray-600 mb-1"><i class="fas fa-user w-5"></i> <span id="r-case-caller"></span></p>
+                <p class="text-gray-600 mb-4"><i class="fas fa-phone w-5"></i> <a href="#" id="r-case-phone" class="text-blue-600 font-bold"></a></p>
+                
+                <hr class="my-4">
+                
+                <h3 class="font-bold mb-3">อัปเดตสถานะการปฏิบัติงาน:</h3>
+                <div class="grid grid-cols-2 gap-2">
+                    <button onclick="updateStatus('En Route')" class="bg-yellow-500 text-white p-3 rounded shadow hover:bg-yellow-600"><i class="fas fa-truck-pickup"></i> ออกเดินทาง</button>
+                    <button onclick="updateStatus('Arrived')" class="bg-blue-500 text-white p-3 rounded shadow hover:bg-blue-600"><i class="fas fa-map-marker-alt"></i> ถึงที่เกิดเหตุ</button>
+                    <button onclick="updateStatus('Transporting')" class="bg-purple-500 text-white p-3 rounded shadow hover:bg-purple-600"><i class="fas fa-hospital"></i> นำส่ง รพ.</button>
+                    <button onclick="updateStatus('Completed')" class="bg-green-600 text-white p-3 rounded shadow hover:bg-green-700"><i class="fas fa-check"></i> ปิดเคส (Clear)</button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Audio for Alert -->
+    <audio id="alert-sound" src="https://actions.google.com/sounds/v1/alarms/digital_watch_alarm_long.ogg" preload="auto"></audio>
+
+    <script src="app.js"></script>
+</body>
+</html>
